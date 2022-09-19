@@ -29,12 +29,31 @@ export class AppController {
       updated_at: new Date,
       type: type === "income" ? ReportType.INCOME : ReportType.EXPENSE
     } 
+
+    data.report.push(newReport)
     return newReport
   }
 
   @Put('/:id')
-  updateReport() {
-    return { id: 1, content: 'Updated Report' }
+  updateReport(
+    @Param('type') type: ReportType, 
+    @Param('id') id: string,
+    @Body() { source, amount }: {source: string, amount: number}) {
+    const reportType = type === "income" ? ReportType.INCOME : ReportType.EXPENSE 
+    const reportToUpdate = data.report.filter(report => report.type === reportType).find(report => report.id === id)
+
+    if(!reportToUpdate) return;
+
+    const reportIndex = data.report.findIndex(report => report.id === reportToUpdate.id)
+
+    data.report[reportIndex] = {
+      ...data.report[reportIndex],
+      source,
+      amount,
+      updated_at: new Date()
+    }
+
+    return data.report[reportIndex]
   }
 
   @Delete('/:id')
