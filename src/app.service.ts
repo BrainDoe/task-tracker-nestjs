@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { data, IData, ReportType } from 'src/data';
 import { v4 as uuid } from 'uuid';
+import { ReportResponseDTO } from './dtos/report.dto';
 
 interface IReport {
   source: string;
@@ -8,22 +9,25 @@ interface IReport {
 }
 
 interface IUpdateReport {
-  source: string;
-  amount: number;
+  source?: string;
+  amount?: number;
 }
 
 @Injectable()
 export class AppService {
 
-  getReports(type: ReportType) {
-    return data.report.filter(report => report.type === type)
+  getReports(type: ReportType): ReportResponseDTO[] {
+    return data.report.filter(report => report.type === type).map(report => new ReportResponseDTO(report));
   }
 
-  getReportById(type: ReportType, id: string) { 
-    return data.report.filter(report => report.type === type).find(report => report.id === id)
+  getReportById(type: ReportType, id: string): ReportResponseDTO{ 
+    const report =  data.report.filter(report => report.type === type).find(report => report.id === id)
+    if(!report) return;
+
+    return new ReportResponseDTO(report);
   }
 
-  createReport(type: ReportType, {source, amount}: IReport) {
+  createReport(type: ReportType, {source, amount}: IReport): ReportResponseDTO {
     const newReport = {
       id: uuid(),
       source,
@@ -34,10 +38,10 @@ export class AppService {
     } 
 
     data.report.push(newReport)
-    return newReport
+    return new ReportResponseDTO(newReport)
   }
 
-  updateReport(type: ReportType, id: string, { source, amount }: IUpdateReport) {
+  updateReport(type: ReportType, id: string, { source, amount }: IUpdateReport): ReportResponseDTO {
     const reportToUpdate = data.report.filter(report => report.type === type).find(report => report.id === id)
 
     if(!reportToUpdate) return;
@@ -51,10 +55,10 @@ export class AppService {
       updated_at: new Date()
     }
 
-    return data.report[reportIndex]
+    return new ReportResponseDTO(data.report[reportIndex])
   }
 
-  deleteReport(id: string) {
+  deleteReport(id: string): void {
     const reportIndex = data.report.findIndex(report => report.id === id)
     if(reportIndex === -1) return
 
